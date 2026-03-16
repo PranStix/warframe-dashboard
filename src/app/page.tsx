@@ -3,8 +3,6 @@
 
 import { useEffect, useState } from "react";
 import { fetchWorldState } from "@/lib/fetchWorldState";
-import { fetchMarketPrices } from "@/lib/fetchMarketPrices";
-import { WATCHLIST_ITEMS } from "@/lib/constants";
 
 type PriceData = Record<string, { avg_price: number; min_price: number }>;
 
@@ -19,12 +17,8 @@ export default function Dashboard() {
   const loadData = async () => {
     try {
       setLoading(true);
-      const [ws, pr] = await Promise.all([
-        fetchWorldState(),
-        fetchMarketPrices(WATCHLIST_ITEMS),
-      ]);
+      const [ws] = await Promise.all([fetchWorldState()]);
       setWorldState(ws);
-      setPrices(pr);
       setError(null);
     } catch (err) {
       console.error(err);
@@ -69,27 +63,6 @@ export default function Dashboard() {
       {/* Alerts (filtered for valuable rewards) */}
       <section className="mb-8">
         <h2 className="text-xl font-semibold mb-2">Alerts</h2>
-        <div className="space-y-2">
-          {worldState?.alerts
-            .filter((alert) =>
-              alert.mission.reward.items?.some((item) =>
-                WATCHLIST_ITEMS.some((w) => item.includes(w.split(" ")[0])),
-              ),
-            )
-            .map((alert) => (
-              <div key={alert.id} className="bg-gray-800 p-3 rounded">
-                <div>
-                  {alert.mission.node} ({alert.mission.faction})
-                </div>
-                <div className="text-yellow-300">
-                  Reward: {alert.mission.reward.items?.join(", ") || "Credits"}
-                </div>
-                <div className="text-xs text-gray-400">
-                  Ends in: {timeUntil(alert.expiry)}
-                </div>
-              </div>
-            ))}
-        </div>
       </section>
 
       {/* Baro */}
@@ -116,28 +89,6 @@ export default function Dashboard() {
         ) : (
           <p>Next arrival: {worldState?.voidTrader.startString || "Unknown"}</p>
         )}
-      </section>
-
-      {/* Market Prices */}
-      <section>
-        <h2 className="text-xl font-semibold mb-2">Watchlist Prices</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-          {WATCHLIST_ITEMS.map((item) => {
-            const price = prices?.[item];
-            return (
-              <div key={item} className="bg-gray-800 p-3 rounded">
-                <div className="font-medium">{item}</div>
-                {price ? (
-                  <div className="text-green-400">
-                    {price.min_price}p (avg: {price.avg_price}p)
-                  </div>
-                ) : (
-                  <div className="text-gray-500 italic">Not traded</div>
-                )}
-              </div>
-            );
-          })}
-        </div>
       </section>
     </div>
   );
